@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-contract DocumentSignature {
+contract DocumentSigner {
     struct Document {
         bytes32 documentHash;
         address[] signers;
@@ -29,7 +29,6 @@ contract DocumentSignature {
             }
         }
         require(isSigner, "Not a signer");
-
         documents[_documentHash].hasSigned[msg.sender] = true;
     }
 
