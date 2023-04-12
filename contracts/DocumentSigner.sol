@@ -4,16 +4,18 @@ pragma solidity ^0.8.19;
 contract DocumentSigner {
     struct Document {
         bytes32 documentHash;
+        string dropboxUrl;
         address[] signers;
         mapping(address => bool) hasSigned;
     }
 
     mapping(bytes32 => Document) public documents;
 
-    function addDocument(bytes32 _documentHash, address[] memory _signers) public {
+    function addDocument(bytes32 _documentHash, string memory _dropboxUrl, address[] memory _signers) public {
         require(documents[_documentHash].documentHash == 0, "Document already exists");
 
         documents[_documentHash].documentHash = _documentHash;
+        documents[_documentHash].dropboxUrl = _dropboxUrl;
         documents[_documentHash].signers = _signers;
     }
 
@@ -41,5 +43,10 @@ contract DocumentSigner {
         }
 
         return (signers, signedStatus);
+    }
+
+    function getDocumentDropboxUrl(bytes32 _documentHash) public view returns (string memory) {
+        require(documents[_documentHash].documentHash != 0, "Document not found");
+        return documents[_documentHash].dropboxUrl;
     }
 }
