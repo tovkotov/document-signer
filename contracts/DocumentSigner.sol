@@ -10,6 +10,7 @@ contract DocumentSigner {
     }
 
     mapping(bytes32 => Document) public documents;
+    bytes32[] public documentHashes;
 
     function addDocument(bytes32 _documentHash, string memory _dropboxUrl, address[] memory _signers) public {
         require(documents[_documentHash].documentHash == 0, "Document already exists");
@@ -17,6 +18,7 @@ contract DocumentSigner {
         documents[_documentHash].documentHash = _documentHash;
         documents[_documentHash].dropboxUrl = _dropboxUrl;
         documents[_documentHash].signers = _signers;
+        documentHashes.push(_documentHash);
     }
 
     function signDocument(bytes32 _documentHash) public {
@@ -49,4 +51,63 @@ contract DocumentSigner {
         require(documents[_documentHash].documentHash != 0, "Document not found");
         return documents[_documentHash].dropboxUrl;
     }
+
+    // Функция для получения списка неподписанных документов для заданного адреса
+    function getUnsignedDocuments(address _signer) public view returns (bytes32[] memory) {
+        bytes32[] memory unsignedDocuments = new bytes32[](0);
+        uint count = 0;
+
+        for (uint documentIndex = 0; documentIndex < documentHashes.length; documentIndex++) {
+            bytes32 documentHash = documentHashes[documentIndex];
+            bool isSigner = false;
+            for (uint i = 0; i < documents[documentHash].signers.length; i++) {
+                if (documents[documentHash].signers[i] == _signer) {
+                    isSigner = true;
+                    break;
+                }
+            }
+
+            if (isSigner && !documents[documentHash].hasSigned[_signer]) {
+                count++;
+                bytes32[] memory tempArray = new bytes32[](count);
+                for (uint j = 0; j < unsignedDocuments.length; j++) {
+                    tempArray[j] = unsignedDocuments[j];
+                }
+                tempArray[count - 1] = documentHash;
+                unsignedDocuments = tempArray;
+            }
+        }
+
+        return unsignedDocuments;
+    }
+
+    // Функция для получения списка подписанных документов для заданного адреса
+    function getSignedDocuments(address _signer) public view returns (bytes32[] memory) {
+        bytes32[] memory signedDocuments = new bytes32[](0);
+        uint count = 0;
+
+        for (uint documentIndex = 0; documentIndex < documentHashes.length; documentIndex++) {
+            bytes32 documentHash = documentHashes[documentIndex];
+            bool isSigner = false;
+            for (uint i = 0; i < documents[documentHash].signers.length; i++) {
+                if (documents[documentHash].signers[i] == _signer) {
+                    isSigner = true;
+                    break;
+                }
+            }
+
+            if (isSigner && documents[documentHash].hasSigned[_signer]) {
+                count++;
+                bytes32[] memory tempArray = new bytes32[](count);
+                for (uint j = 0; j < signedDocuments.length; j++) {
+                    tempArray[j] = signedDocuments[j];
+                }
+                tempArray[count - 1] = documentHash;
+                signedDocuments = tempArray;
+            }
+        }
+
+        return signedDocuments;
+    }
+
 }
